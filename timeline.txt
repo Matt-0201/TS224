@@ -1,0 +1,9 @@
+Projet Filtrage et Estimation 
+
+Encadrant: M.Grivel
+
+Binôme : Eoghan TRAVERSINO, Matthieu KOLLEN
+
+05/11/25 : Découverte du sujet, Matthieu: bruit blanc et estimateurs préliminaire 1 / Eoghan: bruitage signal parole préliminaire 2
+
+07/11/25 : 
