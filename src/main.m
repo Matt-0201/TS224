@@ -43,39 +43,100 @@ hold off;
 legend('Spectre de puissance', 'DSP');
 title('Tracés de la DSP et du spectre de puissance du BBGC');
 ylabel('Amplitutude');
-xlabel('Fréquence normalisée')
-
-% Fenetrer: garder les valeurs fiables 
+xlabel('Fréquence normalisée');
 
 % Périodogramme de Barlett
 NFFT = 256;
-Fe = 8000;
-f = -Fe/2:Fe/NFFT:(Fe/2-Fe/NFFT);
+f = -1/2:1/NFFT:1/2-1/NFFT;
 
-DSP_Barlett = bartlett(bruit, N);
+DSP_Bartlett = bartlett(bruit, NFFT);
 
-%figure;
-%plot(freq_puiss, DSP_Barlett);
+figure;
+subplot(211);
+hold on;
+plot(f, DSP_Bartlett, 'r', DisplayName='Périodogramme de Bartlett (NFFT points)');
+plot(f, DSP(1:NFFT), 'g', DisplayName='Densité spectrale de puissance');
+hold off;
+legend();
+title("Périodogramme de Bartlett et densité spectrale de puissance");
+ylabel('Amplitutude');
+xlabel('Fréquence normalisée');
+subplot(212);
+plot(freq_puiss, spectre_puiss, 'b', DisplayName="Spectre de puissance");
+legend();
+ylabel('Amplitutude');
+xlabel('Fréquence normalisée');
+title("Spectre de puissance")
 
 % Périodogramme de Welch
-DSP_Welch = welch(bruit, NFFT, Fe);
+
+overlap = 0.1;
+DSP_Welch = welch(bruit, NFFT, overlap);
 
 figure;
+subplot(211)
 hold on;
-plot(f, DSP_Welch, 'r');
-%plot(f, spectre_puiss, 'b');
+plot(f, DSP_Welch, 'r', DisplayName="Périodogramme de Welch (NFFT points)");
+plot(f, DSP(1:NFFT), 'g', DisplayName="Densité spectrale de puissance");
 hold off;
+legend();
+title("Périodogramme de Welch et densité spectrale de puissance");
+ylabel('Amplitutude');
+xlabel('Fréquence normalisée');
+subplot(212);
+plot(freq_puiss, spectre_puiss, 'b', DisplayName="Spectre de puissance (N points)");
+legend();
+ylabel('Amplitutude');
+xlabel('Fréquence normalisée');
+title("Spectre de puissance")
+
+% Périodogramme de Daniell
+
+M = 5;                          % Taille de la fenetre de lissage
+DSP_Daniell = daniell(bruit, M);
+
+figure;
+subplot(211)
+hold on;
+plot(freq_puiss, DSP_Daniell, 'r', DisplayName="Périodogramme de Daniell (N points)");
+plot(freq_puiss, DSP, 'g', DisplayName="Densité spectrale de puissance");
+hold off;
+legend();
+title("Périodogramme de Daniell et densité spectrale de puissance");
+ylabel('Amplitutude');
+xlabel('Fréquence normalisée');
+subplot(212);
+plot(freq_puiss, spectre_puiss, 'b', DisplayName="Spectre de puissance (N points)");
+legend();
+ylabel('Amplitutude');
+xlabel('Fréquence normalisée');
+title("Spectre de puissance")
 
 % Corrélogramme
-%correlogram = abs(fftshift(fft(xcorr_biased)));
+
+M_correl = N/5;                             % Tronquage, réduit la variance
+correlogram = correlogram(bruit, M_correl);
+L = length(correlogram);
+f_correl = -1/2:1/L:1/2-1/L;
 
 figure;
+subplot(211)
 hold on;
-%plot(freq_puiss, correlogram, 'r');
-%plot(freq_puiss, spectre_puiss, 'b');
+plot(f_correl, correlogram, 'r', DisplayName="Corrélogramme");
+plot(f_correl, DSP(1:L), 'g', DisplayName="Densité spectrale de puissance");
 hold off;
+legend();
+title("Corrélogramme et densité spectrale de puissance");
+ylabel('Amplitutude');
+xlabel('Fréquence normalisée');
+subplot(212);
+plot(freq_puiss, spectre_puiss, 'b', DisplayName="Spectre de puissance (N points)");
+legend();
+ylabel('Amplitutude');
+xlabel('Fréquence normalisée');
+title("Spectre de puissance")
 
 % Platitude spectrale
-plat_spectrale = geomean(spectre_puiss)/mean(spectre_puiss);
+%plat_spectrale = geomean(spectre_puiss)/mean(spectre_puiss);
 
 

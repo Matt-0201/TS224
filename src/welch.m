@@ -1,16 +1,21 @@
-function DSP = welch(x, NFFT, Fe)
-    %y = Mon_Welch_(x, NFFT, Fe);
-              
-    nb_points = length(x);
-    nb_seg = floor(nb_points/NFFT);
-    disp(nb_seg);
-    DSP_sum = zeros(1,NFFT);
-    for i=1:nb_seg
-        seg = x((i-1)*NFFT+1:i*NFFT);
-        FFT = fftshift(fft(seg, NFFT));
-        DSPi= abs(FFT).^2;
-        DSP_sum = DSP_sum + DSPi;
-    end
+function DSP = welch(x, NFFT, overlap)
+    % Algorithme de Welch: découpage en K segments du signal fenêtré puis
+    % moyenne. 
+    % Recouvrement entre chaque segments de % overlap
+    % x : signal 
+    % NFFT: Nombre de points de la DSP finale
 
-    DSP = (DSP_sum/nb_seg)/NFFT*Fe;
+    N = length(x);
+    recouvrement = floor(overlap * NFFT);  % Nombre de points qui recouvrent morceau du signal
+    ecart = NFFT - recouvrement;           % Ecart entre chaque morceau
+    K = floor((N - NFFT) / ecart) + 1;
+    window = hamming(NFFT)';
+    U = sum(window.^2)/NFFT;
+    DSP_seg = zeros(K,NFFT);
+    for i=1:K
+        seg = x((i-1)*ecart+1:(i-1)*ecart+NFFT);
+        seg_window = seg.*window;
+        DSP_seg(i,:) = (abs(fft(seg_window)).^2) / (NFFT*U);
+    end
+    DSP = mean(DSP_seg,1);
 end
