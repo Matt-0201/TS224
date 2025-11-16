@@ -16,7 +16,7 @@ sigma_carre = 100;
 len_s = length(s);
 Fe = 8000; %Hz ,fréqence d'echantillonnage
 t=(0:len_s-1)/Fe;
-RSB = 10; % = 5:5:15;
+RSB = 5; % = 5:5:15;
 
 % == Paramètres pour le spectrogramme
 fenetre = hamming(256); % Fenêtre de Hamming

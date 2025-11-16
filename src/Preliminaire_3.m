@@ -16,7 +16,7 @@ t=(0:len_s-1)/Fe;
 RSB = 10; % = 5:5:15;
 
 % == Paramètres du filtre
-k_0 = 10;
+k_0 = 100;
 num = zeros(k_0 + 1, 1);
 num(1,1) = 1;
 num(k_0 + 1, 1) = 1;
@@ -84,8 +84,8 @@ title(['Spectrogramme du signal de parole : fcno01fz filtré (k_0 = ' num2str(k_
 colorbar;
 
 % ===== Ecoute des signaux
-% soundsc(s);
+soundsc(s);
 % pause(7);
 % soundsc(signalBruit_ajuste);
-% pause(7);
-% soundsc(y);
+pause(7);
+soundsc(y);
