@@ -2,15 +2,15 @@ clear
 close all
 clc
 
-%Projet Filtrage et Estimateurs
+%% Projet Filtrage et Estimateurs
 
 %Chargement d'un signal de parole
 signal1 = load('../data/fcno01fz.mat'); %Attention, c'est un struct
 
-%Ecoute du signal non bruité
+%% Ecoute du signal non bruité
 %soundsc(signal1.fcno01fz);
 
-% ===== Paramètres
+%% Paramètres
 s = signal1.fcno01fz;
 sigma_carre = 100;
 len_s = length(s);
@@ -18,7 +18,7 @@ Fe = 8000; %Hz ,fréqence d'echantillonnage
 t=(0:len_s-1)/Fe;
 RSB = 5; % = 5:5:15;
 
-% == Paramètres pour le spectrogramme
+%Paramètres pour le spectrogramme
 fenetre = hamming(256); % Fenêtre de Hamming
 noverlap = 128; %Chevauchement
 nfft = 512; %Nombre de points FFT
@@ -28,7 +28,7 @@ nfft = 512; %Nombre de points FFT
 Bruit = randn(1,len_s);
 len_bruit = length(Bruit);
 
-% ===== Signal bruité sans ajustement ni maitrise du RSB
+%% Signal bruité sans ajustement ni maitrise du RSB
 signalBruit = s +  sigma_carre *Bruit'; % Ajout du bruit au signal avec transposition
 
 
@@ -45,11 +45,11 @@ fprintf('Pb = %.3f\n',Pb);
 aj = Ps/(Pb * 10^(RSB/10));
 alpha = sqrt(aj);
 
-% ===== Signal bruité avec ajustement du RSB
+%% Signal bruité avec ajustement du RSB
 signalBruit_ajuste = s + alpha * Bruit'; 
 
-% ===== Affichage
-% == Signal de parole pur
+%% Affichage
+%Signal de parole pur
 figure;
 subplot(2,1,1);
 plot(t,s);
@@ -65,13 +65,13 @@ title('Spectrogramme du signal de parole : fcno01fz');
 colorbar;
 
 
-% == Bruit BBGC
+%Bruit BBGC
 % figure;
 % plot(Bruit);
 % xlim([1 len_bruit]);
 % grid on;
 
-% == Signal bruité sans ajustmement du RSB
+%Signal bruité sans ajustmement du RSB
 % figure;
 % subplot(2,1,1);
 % plot(t, signalBruit);
@@ -88,7 +88,7 @@ colorbar;
 
 %soundsc(signalBruit);
 
-% == Signal bruité avec ajustement du RSB
+%Signal bruité avec ajustement du RSB
 figure;
 subplot(2,1,1);
 plot(t, signalBruit_ajuste);
@@ -100,7 +100,7 @@ grid on;
 
 %soundsc(signalBruit_ajuste);
 
-%Spectrogramme
+%% Spectrogramme
 subplot(2,1,2);
 spectrogram(signalBruit_ajuste, fenetre, noverlap, nfft, Fe, 'yaxis');
 title(['Spectrogramme du signal bruité avec ajustement du RSB (RSB = ' num2str(RSB) ' dB)']);
