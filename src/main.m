@@ -3,6 +3,9 @@ clear
 close all
 clc
 
+%load("../data/signal_radar_config1.mat")
+%addpath("../data");
+
 %% Préliminaire 1
 % Paramètres
 N = 2048;
@@ -70,7 +73,7 @@ title("Spectre de puissance")
 
 % Périodogramme de Welch
 
-overlap = 0.1;
+overlap = 0.5;
 DSP_Welch = welch(bruit, NFFT, overlap);
 
 figure;
@@ -92,7 +95,7 @@ title("Spectre de puissance")
 
 % Périodogramme de Daniell
 
-M = 5;                          % Taille de la fenetre de lissage
+M = 20;                          % Taille de la fenetre de lissage
 DSP_Daniell = daniell(bruit, M);
 
 figure;
@@ -138,5 +141,113 @@ title("Spectre de puissance")
 
 % Platitude spectrale
 %plat_spectrale = geomean(spectre_puiss)/mean(spectre_puiss);
+
+% Platitude spectrale: caractériser le signal
+
+% Expliquer le choix de l'addition recouvrement
+
+%% 2.6 - Base de données de signaux bruités
+clc
+clear
+load("../data/fcno01fz.mat");
+load("../data/fcno03fz.mat");
+load("../data/fcno04fz.mat");
+
+% Création de la base de donnée de signaux bruités
+x1 = fcno01fz;
+x2 = fcno03fz;
+x3 = fcno04fz;
+N_ = length(x3);
+x1 = [x1; zeros(N_-length(x1), 1)];  % 0-padding pour mettre les signaux dans une matrice
+x2 = [x2; zeros(N_-length(x2), 1)];  % et les filtrer
+ 
+data = [x1, x2, x3];
+data_noise = zeros(N_, 9);
+associated_noise = zeros(N_, 9);
+RSB = 5;
+k = 1;
+for i=1:9
+    [data_noise(:, i), associated_noise(:,i)] = bruitageSignal(data(:,k), RSB);
+    RSB = RSB + 5;
+    if (RSB == 20)
+        RSB = 5;    % On repasse le RSB à 5
+        k = k + 1;  % On passe au signal suivant
+    end
+end
+
+% Méthode de soustraction spectrale
+fs = 8000;
+DSP_data_noise = abs(fftshift(fft(data_noise(:,1))).^2)/N_;
+DSP_noise = abs(fftshift(fft(associated_noise(:,1))).^2)/N_;
+
+DSP_th = abs(fftshift(fft(x1)).^2)/N_;
+
+%stft(data_noise(:,1), fs);
+
+DSP_reconstruct_signal = DSP_data_noise - DSP_noise;
+
+% for i=1:N_
+%     new_val = DSP_data_noise(i) - DSP_noise(i);
+%     if (new_val < 0)
+%         DSP_reconstruct_signal(i) = 0;
+%     else
+%         DSP_reconstruct_signal(i) = new_val;
+%     end
+% end
+
+figure;
+hold on;
+plot(DSP_data_noise,"r", DisplayName="Spectre de puissance signal bruité", LineWidth=2);
+plot(DSP_th, "g", DisplayName="SPectre de puissance théorique", LineWidth=3);
+plot(DSP_reconstruct_signal, "b", DisplayName="Spectre de puissance du signal reconstruit");
+legend();
+hold off;
+
+% Affichage des signaux à bruiter (pour vérification)
+% figure;
+% sgtitle("Premier signal de parole avec bruitage de RSB 5, 10 et 15", fontsize=16);
+% subplot(221);
+% plot(x1);
+% title("Signal de base");
+% subplot(222);
+% plot(data_noise(:,1));
+% title("RSB = 5");
+% subplot(223);
+% plot(data_noise(:,2));
+% title("RSB = 10");
+% subplot(224);
+% plot(data_noise(:,3));
+% title("RSB = 15");
+% 
+% figure;
+% sgtitle("Deuxième signal de parole avec bruitage de RSB 5, 10 et 15", fontsize=16);
+% subplot(221);
+% plot(x2);
+% title("Signal de base");
+% subplot(222);
+% plot(data_noise(:,4));
+% title("RSB = 5");
+% subplot(223);
+% plot(data_noise(:,5));
+% title("RSB = 10");
+% subplot(224);
+% plot(data_noise(:,6));
+% title("RSB = 15");
+% 
+% figure;
+% sgtitle("Troisième signal de parole avec bruitage de RSB 5, 10 et 15", fontsize=16);
+% subplot(221);
+% plot(x3);
+% title("Signal de base");
+% subplot(222);
+% plot(data_noise(:,7));
+% title("RSB = 5");
+% subplot(223);
+% plot(data_noise(:,8));
+% title("RSB = 10");
+% subplot(224);
+% plot(data_noise(:,8));
+% title("RSB = 15");
+
 
 
