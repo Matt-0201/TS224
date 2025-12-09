@@ -198,7 +198,7 @@ DSP_reconstruct_signal = DSP_data_noise - DSP_noise;
 figure;
 hold on;
 plot(DSP_data_noise,"r", DisplayName="Spectre de puissance signal bruité", LineWidth=2);
-plot(DSP_th, "g", DisplayName="SPectre de puissance théorique", LineWidth=3);
+plot(DSP_th, "g", DisplayName="Spectre de puissance théorique", LineWidth=3);
 plot(DSP_reconstruct_signal, "b", DisplayName="Spectre de puissance du signal reconstruit");
 legend();
 hold off;

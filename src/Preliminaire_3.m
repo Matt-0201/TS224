@@ -50,7 +50,8 @@ alpha = sqrt(aj);
 signalBruit_ajuste = s + alpha * Bruit'; 
 
 %Mise en place du filtre
-y = filter(num,den,s);
+%y = filter(num,den,s);
+y = filter(num,den,signalBruit_ajuste);
 
 %% Affichage
 % Signal de parole pur
