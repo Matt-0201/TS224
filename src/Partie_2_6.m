@@ -1,6 +1,7 @@
 %% 2.6 - Base de données de signaux bruités
-clc
 clear
+close all
+clc
 
 %Chargement des signaux de parole
 load("../data/fcno01fz.mat");
@@ -39,7 +40,7 @@ Fe = 8000; %Hz ,fréquence d'echantillonnage
 t=(0:len_s-1)/Fe;
 NFFT = 512;
 % type_fenetre : @hamming, @hann, @blackman
-type_fenetre = @hann;
+type_fenetre = @hamming;
 overlap = 0.5;
 
 
@@ -70,38 +71,89 @@ for i = 1:K %Pour l'instant, on garde la première et la dernière trame
         frames(:, i) = trame;
     end
 end
-   
-% %% Boucle d'Addition - Recouvrement
-% for i = 2:K - 1 %On enlève la première et le dernière trame        
-%     %Découpe en trames
-%     start_idx = (i-1)*ecart + 1;
-%     stop_idx = start_idx + NFFT - 1;
-% 
-%     %Extraction + zero padding si nécessaire
-%     if stop_idx <= L
-%         trame = s(start_idx:stop_idx);
-%     else %Cas si la dernière trame est incomplete
-%         trame = zeros(NFFT,1);
-%         len_restante = L - start_idx + 1;
-%         trame(1:len_restante) = s(start_idx:L); %Le reste de la trame est remplie de 0 (élement neutre)
-%     end
-% 
-%     %Créer une fenêtre de la taille de la trame x
-%     window = type_fenetre(length(trame));
-% 
-%     %Fenetrage de la fenetre
-%     trame_windowed = trame .* window;
-% 
-%     %Reconstitution
-%     %s_rebuilt(start_idx:stop_idx) = trame_windowed; 
-%     s_rebuilt(start_idx:stop_idx) = s_rebuilt(start_idx:stop_idx) + trame_windowed;
-% end
 
-% Calcul de la transformée de Fourier à court terme (STFT)
-%[S, F, T] = stft(s, Fe, 'Window', type_fenetre(len_s), 'OverlapLength', overlap*len_s, 'FFTLength', NFFT);
+%% Affichage
+
+%% Representations temporelles
+trame_1 = frames(:,1);
+
+%Bruitage trame 1 à 5 dB
+RSB_trame_1 = 5; % Define the RSB for the first frame
+[bruit_trame_1, bbgc_ajusted] = bruitageSignal(trame_1, RSB_trame_1);
+
+diff_trame_1 = abs(trame_1 - bruit_trame_1);
+
+%trame_2 = frames(:,1);
+
+figure;
+subplot(2,1,1);
+plot(trame_1); %Penser a mettre le temps en abcsisse 
+xlabel('Temps (s)')
+ylabel('Amplitude')
+title('Représentation du signal de parole : trame 1')
+grid on
+
+subplot(2,1,2);
+plot(bruit_trame_1);
+xlabel('Temps (s)')
+ylabel('Amplitude')
+title('Représentation du signal de parole : trame 1')
+grid on
+
+figure;
+plot(diff_trame_1);
+xlabel('Temps (s)')
+ylabel('Amplitude')
+title('Représentation du signal de parole : trame 1')
+grid on
+
+%% Spectres d'amplitudes
+
+%fenetrage
+%Fenetrage de la trame 1 non bruitéé
+window = type_fenetre(NFFT);
+trame_windowed = trame_1 .* window;
+fft_trame_1 = fft(trame_windowed);
+
+Fs = Fe;
 
 
+%Fenetrage de la trame 1 bruitée
+trame_noised_windowed = bruit_trame_1 .* window;
+fft_trame_1_bruitee = fft(trame_windowed);
 
+
+%Y = fft(trame_windowed); % Compute the FFT of the windowed frame
+figure;
+subplot(2,1,1);
+plot(Fs/NFFT*(0:NFFT-1), abs(fft_trame_1), "LineWidth", 3)
+title("Spectre d'amplitude de la trame 1")
+xlabel("f (Hz)")
+ylabel("|fft(X)|")
+
+
+subplot(2,1,2);
+plot(Fs/NFFT*(0:NFFT-1), abs(fft_trame_1_bruitee), "LineWidth", 3)
+title("Spectre d'amplitude de la trame 1")
+xlabel("f (Hz)")
+ylabel("|fft(X)|")
+
+%Rehaussement du signal de parole par la méthode de la soustaction spectrale
+for j = 1:K 
+    %Tranformée de Fourier à court terme pour chacune des trames et du bruit associé
+    frames(:,j)= stft(frames(:,j));
+    % Transformée de Fourier à court terme pour la trame bruitée
+    frames_noised(:,j) = stft(bruit_trame_1);
+    %Spectre de puissance
+    
+    % Calcul de la puissance du spectre de la trame bruitée
+    DSP_data_noise = abs(fftshift(fft(bruit_trame_1))).^2 / NFFT;
+    DSP_noise = abs(fftshift(fft(associated_noise(:,1)))).^2 / NFFT;
+    
+    % Soustraction spectrale
+    DSP_reconstruct_signal = DSP_data_noise - DSP_noise;
+    DSP_reconstruct_signal(DSP_reconstruct_signal < 0) = 0; % Élimination des valeurs négatives
+end
 % Méthode de soustraction spectrale
 % fs = 8000;
 % DSP_data_noise = abs(fftshift(fft(data_noise(:,1))).^2)/N_;

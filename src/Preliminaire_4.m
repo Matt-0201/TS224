@@ -39,7 +39,7 @@ subplot(312);
 plot(t, s_rebuilt);
 xlabel('Temps (s)');
 ylabel('Amplitude');
-title(['Représentation du signal de parole reconstruit (Fentrage = Hamming et Overlap = ' num2str(overlap) ' )']);
+title(['Représentation du signal de parole reconstruit (Fentrage = Hann et Overlap = ' num2str(overlap) ' )']);
 grid on;
 
 % Affichage de la comparaison entre le signal pur et le signal reconstruit
