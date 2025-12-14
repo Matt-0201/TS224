@@ -3,146 +3,158 @@ clear
 close all
 clc
 
-%% Préliminaire 1
+% Préliminaire 1
 % Paramètres
 N = 2048;
 sig2 = 1;
+fe = 8e3;
 
-% Genration d'un bbgc
+% Genration d'un bruit blanc Gaussien
 bruit = randn(1, N) * sqrt(sig2);
 
 % Fonction d'autocorrélation et estimateurs
-xcorr_normalized = xcorr(bruit, N, 'normalized');
-xcorr_biased = xcorr(bruit, N, 'biased');
-xcorr_unbiased = xcorr(bruit, N, 'unbiased');
-freq_corr = -1:1/N:1;
+[xcorr_biased, lags_biased] = xcorr(bruit, N, 'biased');
+[xcorr_unbiased, lags_unbiased] = xcorr(bruit, N, 'unbiased');
+time_lags = lags_biased / fe * 1000;
+
+% Fonction d'autocorrélation théorique
+len_xcorr = length(xcorr_biased);
+Rxx_th = zeros(len_xcorr,1);
+Rxx_th(round(len_xcorr/2),1) = sig2; 
 
 % DSP et spectre de puissance
 spectre_puiss = (abs(fftshift(fft(bruit,N))).^2)/N;
 DSP = sig2*ones(1,N);
-freq_puiss = -1/2:1/N:1/2-1/N;
+freq_puiss = -fe/2:fe/N:fe/2-fe/N;
 
 % Tracés des fonctions d'autocorrélations
+xlims = [-258, 258];
 figure;
-hold on;
-plot(freq_corr,xcorr_normalized, 'r', LineWidth=4);
-plot(freq_corr,xcorr_biased, 'g', LineWidth=2);
-plot(freq_corr,xcorr_unbiased, 'b');
-hold off;
-legend('Théorique','Biaisé', 'Non biaisé');
-title("Tracés de la fonctions d'autocorrélation et des etimateurs d'un BBGC");
+subplot(311)
+plot(time_lags,xcorr_biased, 'r');
+legend('Biaisé');
+title("Estimateur biaisé de la fonction d'autocorrélation du bruit blan Gaussien");
+xlim(xlims);
 ylabel('Amplitutude');
-xlabel('Fréquence normalisée')
+xlabel('Retard en ms')
+
+subplot(312)
+plot(time_lags,xcorr_unbiased, 'g');
+legend('Non biaiséé');
+title("Estimateur non biaisé de la fonction d'autocorrélation du bruit blan Gaussien");
+xlim(xlims);
+ylabel('Amplitutude');
+xlabel('Retard en ms')
+
+subplot(313)
+plot(time_lags,Rxx_th, 'b', LineWidth=2);
+legend('Théorique');
+title("Fonction d'autocorrélation théorique");
+xlim(xlims);
+ylabel('Amplitude')
+xlabel('Retard en ms');
+
 
 % Tracés DSP et spectre de puissance
 figure;
 hold on;
-plot(freq_puiss, spectre_puiss, 'g');
+plot(freq_puiss, spectre_puiss, 'b');
 plot(freq_puiss, DSP, 'r', LineWidth=2);
 hold off;
 legend('Spectre de puissance', 'DSP');
-title('Tracés de la DSP et du spectre de puissance du BBGC');
+title('Tracés de la DSP et du spectre de puissance du bruit blanc Gaussien');
 ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
+xlabel('Fréquence (Hz)');
 
 % Périodogramme de Barlett
 NFFT = 256;
-f = -1/2:1/NFFT:1/2-1/NFFT;
+f = 0:fe/NFFT:fe-fe/NFFT;
 
 DSP_Bartlett = bartlett(bruit, NFFT);
-
-figure;
-subplot(211);
-hold on;
-plot(f, DSP_Bartlett, 'r', DisplayName='Périodogramme de Bartlett (NFFT points)');
-plot(f, DSP(1:NFFT), 'g', DisplayName='Densité spectrale de puissance');
-hold off;
-legend();
-title("Périodogramme de Bartlett et densité spectrale de puissance");
-ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
-subplot(212);
-plot(freq_puiss, spectre_puiss, 'b', DisplayName="Spectre de puissance");
-legend();
-ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
-title("Spectre de puissance")
 
 % Périodogramme de Welch
 
 overlap = 0.5;
 DSP_Welch = welch(bruit, NFFT, overlap);
 
-figure;
-subplot(211)
-hold on;
-plot(f, DSP_Welch, 'r', DisplayName="Périodogramme de Welch (NFFT points)");
-plot(f, DSP(1:NFFT), 'g', DisplayName="Densité spectrale de puissance");
-hold off;
-legend();
-title("Périodogramme de Welch et densité spectrale de puissance");
-ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
-subplot(212);
-plot(freq_puiss, spectre_puiss, 'b', DisplayName="Spectre de puissance (N points)");
-legend();
-ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
-title("Spectre de puissance")
 
 % Périodogramme de Daniell
 
 M = 20;                          % Taille de la fenetre de lissage
 DSP_Daniell = daniell(bruit, M);
+f_daniell = 0:fe/N:fe-fe/N;
 
-figure;
-subplot(211)
-hold on;
-plot(freq_puiss, DSP_Daniell, 'r', DisplayName="Périodogramme de Daniell (N points)");
-plot(freq_puiss, DSP, 'g', DisplayName="Densité spectrale de puissance");
-hold off;
-legend();
-title("Périodogramme de Daniell et densité spectrale de puissance");
-ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
-subplot(212);
-plot(freq_puiss, spectre_puiss, 'b', DisplayName="Spectre de puissance (N points)");
-legend();
-ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
-title("Spectre de puissance")
 
 % Corrélogramme
 
 M_correl = N/5;                             % Tronquage, réduit la variance
 correlogram = correlogram(bruit, M_correl);
 L = length(correlogram);
-f_correl = -1/2:1/L:1/2-1/L;
+f_correl = -fe/2:fe/L:fe/2-fe/L;
 
 figure;
-subplot(211)
-hold on;
-plot(f_correl, correlogram, 'r', DisplayName="Corrélogramme");
-plot(f_correl, DSP(1:L), 'g', DisplayName="Densité spectrale de puissance");
-hold off;
-legend();
-title("Corrélogramme et densité spectrale de puissance");
+% Affichage périodogramme de Bartlett
+subplot(411)
+plot(f, DSP_Bartlett, 'r');
+title("Périodogramme de Bartlett");
 ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
-subplot(212);
-plot(freq_puiss, spectre_puiss, 'b', DisplayName="Spectre de puissance (N points)");
-legend();
+xlabel('Fréquence (Hz)');
+
+% Affichage périodogramme de Welch
+subplot(412)
+plot(f, DSP_Welch, 'g');
+title("Périodogramme de Welch");
 ylabel('Amplitutude');
-xlabel('Fréquence normalisée');
-title("Spectre de puissance")
+xlabel('Fréquence (Hz)');
+
+% Affichage périodogamme de Daniell
+subplot(413)
+plot(f_daniell, DSP_Daniell, 'b');
+title("Périodogramme de Daniell");
+ylabel('Amplitutude');
+xlabel('Fréquence (Hz)');
+
+% Affichage Corrélogramme
+subplot(414)
+plot(f_correl, correlogram, 'm');
+title("Corrélogramme");
+ylabel('Amplitutude');
+xlabel('Fréquence (Hz)');
 
 % Platitude spectrale
-%plat_spectrale = geomean(spectre_puiss)/mean(spectre_puiss);
 
-% Platitude spectrale: caractériser le signal
+%MA = mean(DSP_Welch);               % Remplacer avec DSP_Welch ou spectre_puiss selon le choix
+%log_spectre_puiss = log(DSP_Welch);
+%MG = exp(mean(log_spectre_puiss));
 
-clear
-clc
+nb_realisations = 100;
+platitudes = zeros(1, nb_realisations);
+
+for i = 1:nb_realisations
+    bruit = randn(1, N);
+    %spectre = (abs(fftshift(fft(bruit,N))).^2)/N;
+    spectre = welch(bruit, NFFT, overlap);
+    
+    MG = exp(mean(log(spectre)));
+    MA = mean(spectre);
+    platitudes(i) = MG / MA;
+end
+
+platitude_moyenne = mean(platitudes);
+ecart_type = std(platitudes);
+
+disp(platitude_moyenne);
+disp(ecart_type)
+
+% Avec MG ordre p:
+
+p = 2;
+MG = exp(mean(log(spectre_puiss)));
+Mp = mean(spectre_puiss.^p)^(1/p);
+%MA = mean(spectre_puiss);
+
+plat_spectrale = MG / Mp;
+disp(plat_spectrale)
 
 %% Premiminaire 2
 

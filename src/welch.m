@@ -6,7 +6,7 @@ function DSP = welch(x, NFFT, overlap)
     % NFFT: Nombre de points de la DSP finale
 
     N = length(x);
-    recouvrement = floor(overlap * NFFT);  % Nombre de points qui recouvrent morceau du signal
+    recouvrement = floor(overlap * NFFT);  % Nombre de points qui recouvrent un morceau du signal
     ecart = NFFT - recouvrement;           % Ecart entre chaque morceau
     K = floor((N - NFFT) / ecart) + 1;
     window = hamming(NFFT)';
