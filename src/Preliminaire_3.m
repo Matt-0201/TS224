@@ -16,7 +16,7 @@ t=(0:len_s-1)/Fe;
 RSB = 10; % = 5:5:15;
 
 % Paramètres du filtre
-k_0 = 100;
+k_0 = 1;
 num = zeros(k_0 + 1, 1);
 num(1,1) = 1;
 num(k_0 + 1, 1) = 1;

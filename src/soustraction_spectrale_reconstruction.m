@@ -1,5 +1,17 @@
 function [signal_rehausse, frames_signal_bruite, trames_restaurees] = soustraction_spectrale_reconstruction(signal_bruite, bruit, NFFT, overlap, type_fenetre)
-    %Fonction qui applique la méthode de la soustraction spectrale
+    % Cette fonction applique la méthode de rehaussement de la parole basé sur la méthode de la soustraction spectrale, suivi d'une reconstruction temporelle par addition–recouvrement.
+    
+    %Entrées :
+    %signal_bruite : signal de parole bruité (vecteur colonne)
+    %bruit         : bruit associé au signal de parole
+    %NFFT          : taille des trames utilisées pour l'analyse spectrale
+    %overlap       : taux de recouvrement entre deux trames (entre 0 et 1)
+    %type_fenetre  : type de fenêtre appliquée aux trames (@hamming, @hann, @blackman, etc.)
+    
+    % Sorties :
+    %signal_rehausse        : signal de parole rehaussé après reconstruction
+    %frames_signal_bruite   : trames du signal bruité
+    %trames_restaurees      : trames temporelles restaurées après soustraction spectrale et transformée de Fourier inverse
 
     %% Paramètres
     L= length(signal_bruite);

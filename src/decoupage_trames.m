@@ -1,5 +1,13 @@
 function signal_decoupe = decoupage_trames(signal_entree, NFFT, overlap)
-    %Fonction qui découpe un signal en K trames
+    % Fonction permettant de découper un signal en trames de longueur fixe avec un recouvrement donné entre deux trames successives
+    
+    % Entrées :
+    %signal_entree : signal à découper (vecteur colonne)
+    %NFFT          : taille des trames (nombre d'échantillons par trame)
+    %overlap       : taux de recouvrement entre deux trames (entre 0 et 1)
+    
+    %Sortie :
+    %signal_decoupe : matrice contenant les trames du signal en colonnes (chaque colonne correspond à une trame)
     
     s = signal_entree;
     L = length(s);

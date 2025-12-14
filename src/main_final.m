@@ -450,4 +450,72 @@ spectrogram(signal_reconstruit, hamming(256), noverlap, NFFT, Fe, 'yaxis');
 title('Spectrogramme du signal de parole rehaussé');
 colorbar;
 
+%% 2.6 -Gain en RSB sur fcno01fz
+clear
+clc
 
+
+%Chargement d'un signal de parole
+signal1 = load('../data/fcno01fz.mat');
+x1 = signal1.fcno01fz;  
+L = length(x1);
+
+%Paramètres de Soustraction Spectrale
+NFFT = 512;
+overlap = 0.5;
+type_fenetre = @hann;
+Fe = 8000;
+
+%Paramètres
+N_realisations = 30; % Nombre de réalisations pour la moyenne
+RSB_cibles = [5, 10, 15]; 
+Nb_RSB = length(RSB_cibles);
+D = floor(NFFT/2);
+
+Somme_Gain_RSB = zeros(Nb_RSB, 1); %Matrice pour les resultats
+
+% Détermination des RSB
+for r = 1:N_realisations
+    for j = 1:Nb_RSB
+        
+        RSB_cible = RSB_cibles(j);
+        
+        %Bruitage du signal
+        [signal_bruite, bruit_associe] = bruitageSignal(x1, RSB_cible);
+        
+        %Soustraction Spectrale
+        [signal_reconstruit, ~, ~] = soustraction_spectrale_reconstruction(signal_bruite, bruit_associe, NFFT, overlap, type_fenetre); %tilde parce que des paramètres ne nous interessent pas
+        
+        %Alignement nécessaire
+        L_alignee = L-D; 
+        s1_aligne = x1((D+1):L); 
+        signal_reconstruit_aligne = signal_reconstruit(1:L_alignee); 
+        bruit_associe_aligne = bruit_associe((D+1):L);
+
+        %Determination RDB initial
+        P_s_initial = mean(s1_aligne.^2);
+        P_b_initial = mean(bruit_associe_aligne.^2);
+        RSB_initial_dB = 10 * log10(P_s_initial/P_b_initial);
+        %Determination RDB final
+        bruit_residuel = signal_reconstruit_aligne - s1_aligne; 
+        P_b_residuel = mean(bruit_residuel.^2);
+        RSB_final_dB = 10 * log10(P_s_initial/P_b_residuel);
+        
+        %Gain
+        Gain_RSB = RSB_final_dB - RSB_initial_dB;
+        Somme_Gain_RSB(j) = Somme_Gain_RSB(j)+ Gain_RSB;
+
+    end
+end
+
+%Moyenne Finale
+Gain_RSB_Moyen = Somme_Gain_RSB/N_realisations;
+
+%% Affichage 
+fprintf('Tableau Récapitulatif des Gains en RSB\n');
+fprintf(' RSB Initial (dB) | Gain Moyen en RSB (dB)\n');
+fprintf('-----------------------------------------\n');
+for j = 1:Nb_RSB
+    fprintf('%18d | %20.2f\n', RSB_cibles(j), Gain_RSB_Moyen(j));
+end
+fprintf('-----------------------------------------\n');

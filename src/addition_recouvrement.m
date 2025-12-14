@@ -1,5 +1,14 @@
 function s_rebuilt = addition_recouvrement(s, NFFT, type_fenetre, overlap)
-    % type_fenetre : @hamming, @hann, @blackman
+    % Fonction qui reconstruit le signal à partir de trames en utilisant la méthode d'addition–recouvrement.
+    
+    % Entrées :
+    % s            : signal d'entrée à découper et reconstruire (vecteur colonne)
+    % NFFT         : taille des trames (nombre d'échantillons par trame)
+    % type_fenetre : type de fenêtre appliquée aux trames (ex : @hamming, @hann, @blackman, etc)
+    % overlap      : taux de recouvrement entre deux trames (entre 0 et 1)
+    
+    % Sortie :
+    % s_rebuilt    : signal reconstruit après fenêtrage et addition–recouvrement    
     
     %% Paramètres
     L = length(s);
@@ -29,7 +38,7 @@ function s_rebuilt = addition_recouvrement(s, NFFT, type_fenetre, overlap)
         %Créer une fenêtre de la taille de la trame x
         window = type_fenetre(length(trame));
         
-        %Fenetrage de la fenetre
+        %Fenetrage de la trame
         trame_windowed = trame .* window;
          
         %Reconstitution
